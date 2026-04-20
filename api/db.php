@@ -12,7 +12,8 @@ if (!$conn) {
     header("Content-Type: application/json");
     echo json_encode([
         "status" => "error",
-        "message" => "Database connection failed"
+        "message" => "Database connection failed",
+        "db_error" => mysqli_connect_error()
     ]);
     exit;
 }
