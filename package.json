@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run dev:vue\" \"npm run dev:php\"",
+    "dev:vue": "vite",
+    "dev:php": "php -S localhost:8000",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -13,6 +15,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.5",
+    "concurrently": "^9.2.1",
     "vite": "^8.0.4"
   }
 }

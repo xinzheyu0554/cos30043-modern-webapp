@@ -7,7 +7,7 @@ const error = ref("");
 
 onMounted(async () => {
   try {
-    const response = await fetch("./api/users.php");
+    const response = await fetch("http://localhost:8000/api/users.php");
     const result = await response.json();
 
     if (result.status === "success") {
