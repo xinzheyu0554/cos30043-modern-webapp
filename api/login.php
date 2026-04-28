@@ -32,12 +32,17 @@ if (!$user || !password_verify($password, $user["password"])) {
     response(false, "Invalid email or password", null, 401);
 }
 
-$_SESSION["user"] = [
-    "userId" => $user["userId"],
+$userData = [
+    "userId" => intval($user["userId"]),
     "username" => $user["username"],
     "email" => $user["email"],
     "role" => $user["role"]
 ];
 
-response(true, "Login successful", $_SESSION["user"]);
+$token = createToken($userData);
+
+response(true, "Login successful", [
+    "token" => $token,
+    "user" => $userData
+]);
 ?>

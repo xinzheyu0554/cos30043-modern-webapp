@@ -20,8 +20,8 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     response(false, "Invalid email format", null, 400);
 }
 
-if (strlen($password) < 6) {
-    response(false, "Password must be at least 6 characters", null, 400);
+if (!preg_match("/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/", $password)) {
+    response(false, "Password must be at least 8 characters and include uppercase, lowercase, number, and special character", null, 400);
 }
 
 $stmt = mysqli_prepare($conn, "SELECT userId FROM `User` WHERE email = ?");
@@ -50,5 +50,19 @@ if (!mysqli_stmt_execute($stmt)) {
     response(false, "Registration failed", mysqli_error($conn), 500);
 }
 
-response(true, "Registration successful");
+$userId = mysqli_insert_id($conn);
+
+$userData = [
+    "userId" => intval($userId),
+    "username" => $username,
+    "email" => $email,
+    "role" => "user"
+];
+
+$token = createToken($userData);
+
+response(true, "Registration successful", [
+    "token" => $token,
+    "user" => $userData
+]);
 ?>
