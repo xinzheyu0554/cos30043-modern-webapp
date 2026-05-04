@@ -34,6 +34,13 @@ function base64UrlDecode($data) {
 }
 
 function createToken($user) {
+    $role = $user["role"] ?? "user";
+    $expiryInSeconds = 60 * 60 * 24;
+
+    if ($role === "user") {
+        $expiryInSeconds = 60 * 60 * 24 * 7;
+    }
+
     $header = base64UrlEncode(json_encode([
         "alg" => "HS256",
         "typ" => "JWT"
@@ -44,7 +51,7 @@ function createToken($user) {
         "username" => $user["username"],
         "email" => $user["email"],
         "role" => $user["role"],
-        "exp" => time() + (60 * 60 * 24)
+        "exp" => time() + $expiryInSeconds
     ]));
 
     $signature = base64UrlEncode(hash_hmac(

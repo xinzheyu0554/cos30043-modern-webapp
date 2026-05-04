@@ -1,8 +1,28 @@
 import { computed, ref } from "vue";
-import { clearAuth, getStoredUser, saveAuth } from "../api/client";
+import {
+  clearAuth,
+  getStoredUser,
+  saveAuth,
+  updateStoredUser,
+} from "../api/client";
 
 export const currentUser = ref(getStoredUser());
 export const isAuthenticated = computed(() => Boolean(currentUser.value));
+
+function isPrivilegedSession() {
+  const role = currentUser.value?.role;
+  return role === "admin" || role === "adminstaff";
+}
+
+function clearPrivilegedAuthOnUnload() {
+  if (isPrivilegedSession()) {
+    clearAuth();
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", clearPrivilegedAuthOnUnload);
+}
 
 export function loginUser(token, user) {
   saveAuth(token, user);
@@ -22,5 +42,5 @@ export function syncCurrentUser(updates) {
     ...updates,
   };
 
-  localStorage.setItem("user", JSON.stringify(currentUser.value));
+  updateStoredUser(currentUser.value);
 }
