@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { apiRequest } from "../api/client";
 
 const contents = ref([]);
@@ -54,7 +54,7 @@ async function saveContent() {
         }),
       });
 
-      message.value = "Content updated";
+      message.value = "Content updated successfully.";
     } else {
       await apiRequest("contents.php", {
         method: "POST",
@@ -67,7 +67,7 @@ async function saveContent() {
         }),
       });
 
-      message.value = "Content created";
+      message.value = "Content created successfully.";
     }
 
     resetForm();
@@ -86,6 +86,7 @@ async function deleteContent(contentId) {
       }),
     });
 
+    message.value = "Content removed.";
     await loadContents();
   } catch (error) {
     message.value = error.message;
@@ -96,54 +97,88 @@ onMounted(loadContents);
 </script>
 
 <template>
-  <div>
-    <h2>Manage Content</h2>
+  <section class="content-panel">
+    <div class="row g-4">
+      <div class="col-12 col-xl-5">
+        <div class="card surface-card h-100">
+          <div class="card-body p-4">
+            <p class="section-kicker">Publishing</p>
+            <h2 class="section-title mb-3">Manage content</h2>
+            <form class="row g-3" @submit.prevent="saveContent">
+              <div class="col-12">
+                <label class="form-label">Title</label>
+                <input v-model="title" class="form-control" />
+              </div>
 
-    <p>{{ message }}</p>
+              <div class="col-12 col-md-6">
+                <label class="form-label">Author</label>
+                <input v-model="author" class="form-control" />
+              </div>
 
-    <form @submit.prevent="saveContent">
-      <div>
-        <label>Title</label>
-        <input v-model="title" />
+              <div class="col-12 col-md-6">
+                <label class="form-label">Category</label>
+                <input v-model="category" class="form-control" />
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Image URL</label>
+                <input v-model="imageUrl" class="form-control" />
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Body</label>
+                <textarea v-model="body" class="form-control" rows="6"></textarea>
+              </div>
+
+              <div class="col-12 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-accent">
+                  {{ editingId ? "Update content" : "Create content" }}
+                </button>
+                <button type="button" class="btn btn-outline-dark" @click="resetForm">
+                  Clear
+                </button>
+              </div>
+            </form>
+
+            <p v-if="message" class="alert alert-info mt-4 mb-0">{{ message }}</p>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label>Author</label>
-        <input v-model="author" />
+      <div class="col-12 col-xl-7">
+        <div class="card surface-card h-100">
+          <div class="card-body p-4">
+            <p class="section-kicker">Existing entries</p>
+            <div class="content-manager-list">
+              <article
+                v-for="content in contents"
+                :key="content.contentId"
+                class="manager-item"
+              >
+                <div>
+                  <p class="content-chip mb-2">{{ content.category || "General" }}</p>
+                  <h3 class="content-card-title mb-1">{{ content.title }}</h3>
+                  <p class="content-subtle mb-0">
+                    {{ content.author || "Unknown author" }}
+                  </p>
+                </div>
+
+                <div class="table-actions">
+                  <button class="btn btn-sm btn-outline-dark" @click="editContent(content)">
+                    Edit
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    @click="deleteContent(content.contentId)"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <div>
-        <label>Category</label>
-        <input v-model="category" />
-      </div>
-
-      <div>
-        <label>Image URL</label>
-        <input v-model="imageUrl" />
-      </div>
-
-      <div>
-        <label>Body</label>
-        <textarea v-model="body"></textarea>
-      </div>
-
-      <button type="submit">
-        {{ editingId ? "Update Content" : "Create Content" }}
-      </button>
-
-      <button type="button" @click="resetForm">Clear</button>
-    </form>
-
-    <hr />
-
-    <div v-for="content in contents" :key="content.contentId">
-      <h3>{{ content.title }}</h3>
-      <p>{{ content.category }}</p>
-
-      <button @click="editContent(content)">Edit</button>
-      <button @click="deleteContent(content.contentId)">Delete</button>
-
-      <hr />
     </div>
-  </div>
+  </section>
 </template>

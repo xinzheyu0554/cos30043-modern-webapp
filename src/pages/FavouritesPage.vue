@@ -1,64 +1,67 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { apiRequest } from "../api/client";
 
-const username = ref("");
-const email = ref("");
-const role = ref("");
+const router = useRouter();
+const favourites = ref([]);
 const message = ref("");
 
-async function loadProfile() {
+async function loadFavourites() {
   try {
-    const result = await apiRequest("profile.php");
-    const profile = result.data;
-
-    username.value = profile.username;
-    email.value = profile.email;
-    role.value = profile.role;
+    const result = await apiRequest("favourites.php");
+    favourites.value = result.data || [];
+    message.value = favourites.value.length ? "" : "No favourites saved yet.";
   } catch (error) {
     message.value = error.message;
   }
 }
 
-async function updateProfile() {
-  try {
-    await apiRequest("profile.php", {
-      method: "PUT",
-      body: JSON.stringify({
-        username: username.value,
-        email: email.value,
-      }),
-    });
-
-    message.value = "Profile updated";
-  } catch (error) {
-    message.value = error.message;
-  }
+function openContent(contentId) {
+  router.push(`/content/${contentId}`);
 }
 
-onMounted(loadProfile);
+onMounted(loadFavourites);
 </script>
 
 <template>
-  <div>
-    <h2>Profile</h2>
-
-    <form @submit.prevent="updateProfile">
+  <section class="content-panel">
+    <div class="section-heading">
       <div>
-        <label>Username</label>
-        <input v-model="username" />
+        <p class="section-kicker">Saved Items</p>
+        <h2 class="section-title">Your favourites</h2>
       </div>
+      <p class="section-copy">
+        Revisit content you have starred and jump back into the detailed page.
+      </p>
+    </div>
 
-      <div>
-        <label>Email</label>
-        <input v-model="email" />
+    <p v-if="message" class="alert alert-secondary">{{ message }}</p>
+
+    <div class="row g-4">
+      <div
+        v-for="content in favourites"
+        :key="content.contentId"
+        class="col-12 col-md-6 col-xl-4"
+      >
+        <article class="card surface-card h-100">
+          <img
+            v-if="content.imageUrl"
+            :src="content.imageUrl"
+            class="card-img-top content-image"
+            alt="content image"
+          />
+          <div class="card-body d-flex flex-column">
+            <span class="content-chip mb-3">{{ content.category || "General" }}</span>
+            <h3 class="content-card-title">{{ content.title }}</h3>
+            <p class="content-subtle">By {{ content.author || "Unknown" }}</p>
+            <p class="card-text flex-grow-1 content-excerpt">{{ content.body }}</p>
+            <button class="btn btn-outline-dark mt-3" @click="openContent(content.contentId)">
+              Open detail page
+            </button>
+          </div>
+        </article>
       </div>
-
-      <p>Role: {{ role }}</p>
-
-      <button type="submit">Update Profile</button>
-    </form>
-
-    <p>{{ message }}</p>
-  </div>
+    </div>
+  </section>
 </template>

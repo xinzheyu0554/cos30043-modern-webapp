@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { apiRequest } from "../api/client";
 
 const users = ref([]);
@@ -66,45 +66,61 @@ onMounted(loadUsers);
 </script>
 
 <template>
-  <div>
-    <h2>Admin User Management</h2>
+  <section class="content-panel">
+    <div class="section-heading">
+      <div>
+        <p class="section-kicker">Administrator</p>
+        <h2 class="section-title">User management</h2>
+      </div>
+      <p class="section-copy">
+        Update user roles, deactivate accounts, and restore access when needed.
+      </p>
+    </div>
 
-    <p>{{ message }}</p>
+    <p v-if="message" class="alert alert-info">{{ message }}</p>
 
-    <table border="1">
-      <thead>
-        <tr>
-          <th>User ID</th>
-          <th>Username</th>
-          <th>Email</th>
-          <th>Role</th>
-          <th>Active</th>
-          <th>Change Role</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+    <div class="card surface-card">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0 admin-table">
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Active</th>
+              <th>Role tools</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
 
-      <tbody>
-        <tr v-for="user in users" :key="user.userId">
-          <td>{{ user.userId }}</td>
-          <td>{{ user.username }}</td>
-          <td>{{ user.email }}</td>
-          <td>{{ user.role }}</td>
-          <td>{{ user.isActive }}</td>
-
-          <td>
-            <button @click="updateRole(user.userId, 'user')">Set User</button>
-            <button @click="updateRole(user.userId, 'adminstaff')">
-              Set Staff
-            </button>
-          </td>
-
-          <td>
-            <button @click="deactivateUser(user.userId)">Deactivate</button>
-            <button @click="restoreUser(user.userId)">Restore</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          <tbody>
+            <tr v-for="user in users" :key="user.userId">
+              <td>{{ user.userId }}</td>
+              <td>{{ user.username }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.role }}</td>
+              <td>{{ user.isActive }}</td>
+              <td class="table-actions">
+                <button class="btn btn-sm btn-outline-dark" @click="updateRole(user.userId, 'user')">
+                  Set user
+                </button>
+                <button class="btn btn-sm btn-outline-dark" @click="updateRole(user.userId, 'adminstaff')">
+                  Set staff
+                </button>
+              </td>
+              <td class="table-actions">
+                <button class="btn btn-sm btn-outline-danger" @click="deactivateUser(user.userId)">
+                  Deactivate
+                </button>
+                <button class="btn btn-sm btn-outline-success" @click="restoreUser(user.userId)">
+                  Restore
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 </template>

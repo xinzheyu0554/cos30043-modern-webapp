@@ -1,14 +1,11 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { RouterLink, useRoute } from "vue-router";
 import { apiRequest } from "../api/client";
+import { currentUser, isAuthenticated } from "../state/session";
 
-const props = defineProps({
-  contentId: Number,
-  user: Object,
-});
-
-const emit = defineEmits(["back"]);
-
+const route = useRoute();
+const contentId = computed(() => Number(route.params.id));
 const content = ref(null);
 const comments = ref([]);
 const likes = ref(0);
@@ -16,17 +13,17 @@ const message = ref("");
 const commentMessage = ref("");
 
 async function loadContent() {
-  const result = await apiRequest(`contents.php?id=${props.contentId}`);
+  const result = await apiRequest(`contents.php?id=${contentId.value}`);
   content.value = result.data;
 }
 
 async function loadComments() {
-  const result = await apiRequest(`comments.php?contentId=${props.contentId}`);
+  const result = await apiRequest(`comments.php?contentId=${contentId.value}`);
   comments.value = result.data || [];
 }
 
 async function loadLikes() {
-  const result = await apiRequest(`likes.php?contentId=${props.contentId}`);
+  const result = await apiRequest(`likes.php?contentId=${contentId.value}`);
   likes.value = result.data?.totalLikes || 0;
 }
 
@@ -35,7 +32,7 @@ async function toggleLike() {
     await apiRequest("likes.php", {
       method: "POST",
       body: JSON.stringify({
-        contentId: props.contentId,
+        contentId: contentId.value,
       }),
     });
 
@@ -50,11 +47,11 @@ async function toggleFavourite() {
     await apiRequest("favourites.php", {
       method: "POST",
       body: JSON.stringify({
-        contentId: props.contentId,
+        contentId: contentId.value,
       }),
     });
 
-    message.value = "Favourite updated";
+    message.value = "Favourite list updated.";
   } catch (error) {
     message.value = error.message;
   }
@@ -65,7 +62,7 @@ async function addComment() {
     await apiRequest("comments.php", {
       method: "POST",
       body: JSON.stringify({
-        contentId: props.contentId,
+        contentId: contentId.value,
         message: commentMessage.value,
       }),
     });
@@ -93,7 +90,7 @@ async function deleteComment(commentId) {
 }
 
 async function loadAll() {
-  if (!props.contentId) return;
+  if (!contentId.value) return;
 
   try {
     message.value = "";
@@ -105,55 +102,117 @@ async function loadAll() {
   }
 }
 
-watch(() => props.contentId, loadAll);
+watch(contentId, loadAll);
 onMounted(loadAll);
 </script>
 
 <template>
-  <div>
-    <button @click="emit('back')">Back</button>
+  <section class="content-panel">
+    <RouterLink to="/browse" class="back-link">
+      <i class="bi bi-arrow-left"></i>
+      Back to browse
+    </RouterLink>
 
-    <p>{{ message }}</p>
+    <p v-if="message" class="alert alert-info mt-3">{{ message }}</p>
 
-    <div v-if="content">
-      <h2>{{ content.title }}</h2>
-      <p>Author: {{ content.author }}</p>
-      <p>Category: {{ content.category }}</p>
-      <p>Creator: {{ content.creatorName }}</p>
+    <div v-if="content" class="row g-4 mt-1">
+      <div class="col-12 col-lg-8">
+        <article class="card surface-card h-100">
+          <img
+            v-if="content.imageUrl"
+            :src="content.imageUrl"
+            class="detail-image"
+            alt="content image"
+          />
+          <div class="card-body p-4 p-lg-5">
+            <div class="content-meta-row mb-3">
+              <span class="content-chip">{{ content.category || "General" }}</span>
+              <span class="content-subtle">
+                Added by {{ content.creatorName || "Staff" }}
+              </span>
+            </div>
+            <h2 class="section-title">{{ content.title }}</h2>
+            <p class="content-subtle">
+              Author: {{ content.author || "Unknown" }}
+            </p>
+            <p class="detail-body">{{ content.body }}</p>
+          </div>
+        </article>
+      </div>
 
-      <img v-if="content.imageUrl" :src="content.imageUrl" alt="content image" width="200" />
+      <div class="col-12 col-lg-4">
+        <div class="card surface-card h-100">
+          <div class="card-body p-4">
+            <p class="section-kicker">Social actions</p>
+            <h3 class="info-title">Community engagement</h3>
+            <p class="mb-3">Likes: {{ likes }}</p>
 
-      <p>{{ content.body }}</p>
+            <div class="d-grid gap-2">
+              <button
+                v-if="isAuthenticated"
+                class="btn btn-accent"
+                @click="toggleLike"
+              >
+                Like or unlike
+              </button>
+              <button
+                v-if="isAuthenticated"
+                class="btn btn-outline-dark"
+                @click="toggleFavourite"
+              >
+                Toggle favourite
+              </button>
+            </div>
 
-      <p>Likes: {{ likes }}</p>
-
-      <button v-if="user" @click="toggleLike">Like / Unlike</button>
-      <button v-if="user" @click="toggleFavourite">Favourite / Unfavourite</button>
+            <p v-if="!isAuthenticated" class="text-muted mt-3 mb-0">
+              Login to like, favourite, and comment.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <hr />
+    <div class="card surface-card mt-4">
+      <div class="card-body p-4 p-lg-5">
+        <p class="section-kicker">Discussion</p>
+        <h3 class="section-title h4 mb-3">Comments</h3>
 
-    <h3>Comments</h3>
+        <form v-if="isAuthenticated" @submit.prevent="addComment">
+          <label class="form-label">Add a comment</label>
+          <textarea
+            v-model="commentMessage"
+            class="form-control"
+            rows="4"
+            placeholder="Write your comment here"
+          ></textarea>
+          <button type="submit" class="btn btn-accent mt-3">Post comment</button>
+        </form>
 
-    <form v-if="user" @submit.prevent="addComment">
-      <textarea v-model="commentMessage" placeholder="Write a comment"></textarea>
-      <br />
-      <button type="submit">Post Comment</button>
-    </form>
+        <p v-else class="text-muted mb-0">Please login to join the discussion.</p>
 
-    <p v-else>Please login to comment.</p>
+        <div v-if="comments.length" class="comment-stack mt-4">
+          <article
+            v-for="comment in comments"
+            :key="comment.commentId"
+            class="comment-card"
+          >
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div>
+                <p class="comment-author mb-1">{{ comment.username }}</p>
+                <p class="mb-0">{{ comment.message }}</p>
+              </div>
 
-    <div v-for="comment in comments" :key="comment.commentId">
-      <p>{{ comment.username }}: {{ comment.message }}</p>
-
-      <button
-        v-if="user && (user.role === 'admin' || user.role === 'adminstaff')"
-        @click="deleteComment(comment.commentId)"
-      >
-        Delete Comment
-      </button>
-
-      <hr />
+              <button
+                v-if="['admin', 'adminstaff'].includes(currentUser?.role)"
+                class="btn btn-sm btn-outline-danger"
+                @click="deleteComment(comment.commentId)"
+              >
+                Delete
+              </button>
+            </div>
+          </article>
+        </div>
+      </div>
     </div>
-  </div>
+  </section>
 </template>
