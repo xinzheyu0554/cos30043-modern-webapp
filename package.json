@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:vue\" \"npm run dev:php\"",
+    "dev": "concurrently -k --kill-others-on-fail --names \"PHP,VUE\" --prefix-colors \"blue,green\" \"npm run dev:php\" \"npm run dev:vue\"",
     "dev:vue": "vite",
-    "dev:php": "php -S localhost:8000",
+    "dev:php": "php -S localhost:8000 -t .",
     "build": "vite build",
     "preview": "vite preview"
   },
