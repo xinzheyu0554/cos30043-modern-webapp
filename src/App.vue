@@ -1,124 +1,83 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
+import { getStoredUser, clearAuth } from "./api/client";
 
-const users = ref([]);
-const loading = ref(true);
-const error = ref("");
+import LoginPage from "./pages/LoginPage.vue";
+import RegisterPage from "./pages/RegisterPage.vue";
+import HomePage from "./pages/HomePage.vue";
+import ContentDetailPage from "./pages/ContentDetailPage.vue";
+import ProfilePage from "./pages/ProfilePage.vue";
+import FavouritesPage from "./pages/FavouritesPage.vue";
+import AdminUsersPage from "./pages/AdminUsersPage.vue";
+import ManageContentPage from "./pages/ManageContentPage.vue";
 
-onMounted(async () => {
-  try {
-    const response = await fetch("http://localhost:8000/api/users.php");
-    const result = await response.json();
+const user = ref(getStoredUser());
+const page = ref(user.value ? "home" : "login");
+const selectedContentId = ref(null);
 
-    if (result.status === "success") {
-      users.value = result.data;
-    } else {
-      error.value = "Failed to load users.";
-    }
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
-});
+function handleAuth(newUser) {
+  user.value = newUser;
+  page.value = "home";
+}
+
+function logout() {
+  clearAuth();
+  user.value = null;
+  selectedContentId.value = null;
+  page.value = "login";
+}
+
+function openContent(contentId) {
+  selectedContentId.value = contentId;
+  page.value = "contentDetail";
+}
 </script>
 
 <template>
-  <div class="app">
-    <div class="container">
-      <h1>User Table Test</h1>
+  <div>
+    <h1>Modern Web App</h1>
 
-      <p v-if="loading">Loading users...</p>
-      <p v-else-if="error">{{ error }}</p>
+    <nav>
+      <button @click="page = 'home'">Home</button>
 
-      <div v-else class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>User ID</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Address</th>
-              <th>Phone</th>
-              <th>Active</th>
-              <th>Created At</th>
-              <th>Updated At</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="user in users" :key="user.userId">
-              <td>{{ user.userId }}</td>
-              <td>{{ user.firstName }}</td>
-              <td>{{ user.lastName }}</td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.role }}</td>
-              <td>{{ user.address || "-" }}</td>
-              <td>{{ user.phoneNumber || "-" }}</td>
-              <td>{{ Number(user.isActive) === 1 ? "Yes" : "No" }}</td>
-              <td>{{ user.createdAt }}</td>
-              <td>{{ user.updatedAt || "-" }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+      <template v-if="user">
+        <button @click="page = 'profile'">Profile</button>
+        <button @click="page = 'favourites'">Favourites</button>
+
+        <button
+          v-if="user.role === 'admin' || user.role === 'adminstaff'"
+          @click="page = 'manageContent'"
+        >
+          Manage Content
+        </button>
+
+        <button v-if="user.role === 'admin'" @click="page = 'adminUsers'">
+          Admin Users
+        </button>
+
+        <button @click="logout">Logout</button>
+      </template>
+
+      <template v-else>
+        <button @click="page = 'login'">Login</button>
+        <button @click="page = 'register'">Register</button>
+      </template>
+    </nav>
+
+    <hr />
+
+    <LoginPage v-if="page === 'login'" @login-success="handleAuth" />
+    <RegisterPage v-if="page === 'register'" @register-success="handleAuth" />
+    <HomePage v-if="page === 'home'" @open-content="openContent" />
+    <ContentDetailPage
+      v-if="page === 'contentDetail'"
+      :content-id="selectedContentId"
+      :user="user"
+      @back="page = 'home'"
+    />
+    <ProfilePage v-if="page === 'profile'" />
+    <FavouritesPage v-if="page === 'favourites'" @open-content="openContent" />
+    <AdminUsersPage v-if="page === 'adminUsers'" />
+    <ManageContentPage v-if="page === 'manageContent'" />
   </div>
 </template>
-
-<style scoped>
-* {
-  box-sizing: border-box;
-}
-
-.app {
-  min-height: 100vh;
-  padding: 32px;
-  background: #f5f7fb;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #1f2937;
-}
-
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-h1 {
-  margin-bottom: 20px;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  background: #ffffff;
-  border: 1px solid #dbe3ec;
-  border-radius: 12px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 1100px;
-}
-
-thead {
-  background: #eef2f7;
-}
-
-th,
-td {
-  padding: 12px 14px;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 14px;
-}
-
-th {
-  font-weight: 700;
-}
-
-tbody tr:hover {
-  background: #f9fafb;
-}
-</style>
