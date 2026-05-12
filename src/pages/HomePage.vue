@@ -4,15 +4,19 @@ import { useRouter } from "vue-router";
 import { apiRequest } from "../api/client";
 
 const router = useRouter();
+
 const contents = ref([]);
 const search = ref("");
 const category = ref("");
 const sort = ref("newest");
 const page = ref(1);
+const limit = 6;
 const message = ref("");
+const isLoading = ref(false);
 
 async function loadContents() {
   try {
+    isLoading.value = true;
     message.value = "";
 
     const query = new URLSearchParams({
@@ -20,13 +24,15 @@ async function loadContents() {
       category: category.value,
       sort: sort.value,
       page: String(page.value),
-      limit: "6",
+      limit: String(limit),
     });
 
     const result = await apiRequest(`contents.php?${query.toString()}`);
-    contents.value = result.data || [];
+    contents.value = Array.isArray(result.data) ? result.data : [];
   } catch (error) {
     message.value = error.message;
+  } finally {
+    isLoading.value = false;
   }
 }
 
@@ -36,6 +42,8 @@ function submitSearch() {
 }
 
 function nextPage() {
+  if (contents.value.length < limit) return;
+
   page.value += 1;
   loadContents();
 }
@@ -77,6 +85,7 @@ onMounted(loadContents);
               class="form-control"
               type="text"
               placeholder="Find by title, category, or body"
+              @keyup.enter="submitSearch"
             />
           </div>
 
@@ -87,12 +96,13 @@ onMounted(loadContents);
               class="form-control"
               type="text"
               placeholder="e.g. Design"
+              @keyup.enter="submitSearch"
             />
           </div>
 
           <div class="col-12 col-md-3">
             <label class="form-label">Sort by</label>
-            <select v-model="sort" class="form-select">
+            <select v-model="sort" class="form-select" @change="submitSearch">
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
               <option value="title">Title</option>
@@ -110,7 +120,9 @@ onMounted(loadContents);
 
     <p v-if="message" class="alert alert-warning mt-4">{{ message }}</p>
 
-    <div class="row g-4 mt-1">
+    <p v-if="isLoading" class="text-muted mt-4">Loading content...</p>
+
+    <div v-else class="row g-4 mt-1">
       <div
         v-for="content in contents"
         :key="content.contentId"
@@ -123,24 +135,42 @@ onMounted(loadContents);
             class="card-img-top content-image"
             alt="content image"
           />
+
           <div class="card-body d-flex flex-column">
             <div class="content-meta-row">
-              <span class="content-chip">{{ content.category || "General" }}</span>
-              <span class="content-subtle">By {{ content.author || "Unknown" }}</span>
+              <span class="content-chip">
+                {{ content.category || "General" }}
+              </span>
+              <span class="content-subtle">
+                By {{ content.author || "Unknown" }}
+              </span>
             </div>
-            <h3 class="content-card-title">{{ content.title }}</h3>
+
+            <h3 class="content-card-title mt-3">
+              {{ content.title }}
+            </h3>
+
             <p class="content-subtle mb-2">
               Added by {{ content.creatorName || "Staff" }}
             </p>
+
             <p class="card-text flex-grow-1 content-excerpt">
               {{ content.body }}
             </p>
-            <button class="btn btn-outline-dark mt-3" @click="openContent(content.contentId)">
+
+            <button
+              class="btn btn-outline-dark mt-3"
+              @click="openContent(content.contentId)"
+            >
               View detail
             </button>
           </div>
         </article>
       </div>
+    </div>
+
+    <div v-if="!isLoading && contents.length === 0" class="alert alert-info mt-4">
+      No content found.
     </div>
 
     <div class="pager-bar">
@@ -151,8 +181,16 @@ onMounted(loadContents);
       >
         Previous
       </button>
+
       <span class="pager-status">Page {{ page }}</span>
-      <button class="btn btn-outline-dark" @click="nextPage">Next</button>
+
+      <button
+        class="btn btn-outline-dark"
+        :disabled="contents.length < limit"
+        @click="nextPage"
+      >
+        Next
+      </button>
     </div>
   </section>
 </template>

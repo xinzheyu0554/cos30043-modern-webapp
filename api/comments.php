@@ -13,9 +13,21 @@ if ($method === "GET") {
 
     $stmt = mysqli_prepare(
         $conn,
-        "SELECT cm.*, u.username
+        "SELECT 
+            cm.commentId,
+            cm.contentId,
+            cm.userId,
+            cm.parentId,
+            cm.message,
+            cm.isDeleted,
+            cm.createdAt,
+            cm.updatedAt,
+            u.username,
+            parentUser.username AS parentUsername
          FROM `Comment` cm
          JOIN `User` u ON cm.userId = u.userId
+         LEFT JOIN `Comment` parentComment ON cm.parentId = parentComment.commentId
+         LEFT JOIN `User` parentUser ON parentComment.userId = parentUser.userId
          WHERE cm.contentId = ? AND cm.isDeleted = 0
          ORDER BY cm.createdAt ASC"
     );
@@ -27,6 +39,12 @@ if ($method === "GET") {
     $comments = [];
 
     while ($row = mysqli_fetch_assoc($result)) {
+        $row["commentId"] = intval($row["commentId"]);
+        $row["contentId"] = intval($row["contentId"]);
+        $row["userId"] = intval($row["userId"]);
+        $row["parentId"] = $row["parentId"] === null ? null : intval($row["parentId"]);
+        $row["isDeleted"] = intval($row["isDeleted"]);
+
         $comments[] = $row;
     }
 
@@ -39,32 +57,73 @@ if ($method === "POST") {
     $data = getJsonInput();
 
     $contentId = intval($data["contentId"] ?? 0);
-    $parentId = isset($data["parentId"]) ? intval($data["parentId"]) : null;
+    $parentId = isset($data["parentId"]) && $data["parentId"] !== null
+        ? intval($data["parentId"])
+        : null;
     $message = trim($data["message"] ?? "");
 
     if ($contentId <= 0 || $message === "") {
         response(false, "contentId and message are required", null, 400);
     }
 
+    if ($parentId !== null && $parentId <= 0) {
+        response(false, "Invalid parent comment", null, 400);
+    }
+
+    if ($parentId !== null) {
+        $checkParent = mysqli_prepare(
+            $conn,
+            "SELECT commentId 
+             FROM `Comment` 
+             WHERE commentId = ? AND contentId = ? AND isDeleted = 0"
+        );
+
+        mysqli_stmt_bind_param($checkParent, "ii", $parentId, $contentId);
+        mysqli_stmt_execute($checkParent);
+        $parentResult = mysqli_stmt_get_result($checkParent);
+
+        if (!mysqli_fetch_assoc($parentResult)) {
+            response(false, "Parent comment not found", null, 404);
+        }
+    }
+
     $now = date("Y-m-d H:i:s");
     $userId = intval($user["userId"]);
 
-    $stmt = mysqli_prepare(
-        $conn,
-        "INSERT INTO `Comment`
-         (contentId, userId, parentId, message, isDeleted, createdAt)
-         VALUES (?, ?, ?, ?, 0, ?)"
-    );
+    if ($parentId === null) {
+        $stmt = mysqli_prepare(
+            $conn,
+            "INSERT INTO `Comment`
+             (contentId, userId, parentId, message, isDeleted, createdAt)
+             VALUES (?, ?, NULL, ?, 0, ?)"
+        );
 
-    mysqli_stmt_bind_param(
-        $stmt,
-        "iiiss",
-        $contentId,
-        $userId,
-        $parentId,
-        $message,
-        $now
-    );
+        mysqli_stmt_bind_param(
+            $stmt,
+            "iiss",
+            $contentId,
+            $userId,
+            $message,
+            $now
+        );
+    } else {
+        $stmt = mysqli_prepare(
+            $conn,
+            "INSERT INTO `Comment`
+             (contentId, userId, parentId, message, isDeleted, createdAt)
+             VALUES (?, ?, ?, ?, 0, ?)"
+        );
+
+        mysqli_stmt_bind_param(
+            $stmt,
+            "iiiss",
+            $contentId,
+            $userId,
+            $parentId,
+            $message,
+            $now
+        );
+    }
 
     if (!mysqli_stmt_execute($stmt)) {
         response(false, "Failed to create comment", mysqli_error($conn), 500);
