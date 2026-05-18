@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { apiRequest } from "../api/client";
 import { currentUser, syncCurrentUser } from "../state/session";
 
@@ -11,9 +11,21 @@ const passwordMessage = ref("");
 const currentPassword = ref("");
 const newPassword = ref("");
 const confirmPassword = ref("");
+const isPasswordModalOpen = ref(false);
 
 const passwordPattern =
   /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+const profileInitials = computed(() => {
+  const source = username.value || currentUser.value?.username || "MyWay User";
+
+  return source
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
+});
 
 async function loadProfile() {
   try {
@@ -85,106 +97,184 @@ async function updatePassword() {
   }
 }
 
+function openPasswordModal() {
+  passwordMessage.value = "";
+  isPasswordModalOpen.value = true;
+}
+
+function closePasswordModal() {
+  isPasswordModalOpen.value = false;
+  passwordMessage.value = "";
+  currentPassword.value = "";
+  newPassword.value = "";
+  confirmPassword.value = "";
+}
+
 onMounted(loadProfile);
 </script>
 
 <template>
   <section class="content-panel">
-    <div class="row g-4">
-      <div class="col-12 col-xl-7">
-        <div class="card surface-card h-100">
-          <div class="card-body p-4 p-lg-5">
+    <div class="profile-showcase">
+      <div class="row g-4">
+        <div class="col-12 col-xl-4">
+          <aside class="profile-sidebar">
+            <div class="profile-avatar">{{ profileInitials }}</div>
             <p class="section-kicker">Account</p>
-            <h2 class="section-title mb-3">Your profile</h2>
-            <form class="row g-3" @submit.prevent="updateProfile">
-              <div class="col-12 col-md-6">
-                <label class="form-label">Username</label>
-                <input v-model="username" class="form-control" type="text" />
-              </div>
+            <h2 class="profile-name">{{ username || currentUser?.username }}</h2>
+            <p class="profile-subtle">{{ email || currentUser?.email }}</p>
 
-              <div class="col-12 col-md-6">
-                <label class="form-label">Email</label>
-                <input v-model="email" class="form-control" type="email" />
+            <div class="profile-status-grid">
+              <div class="profile-status-card">
+                <span class="profile-status-label">Role</span>
+                <span class="profile-status-value">{{ role || currentUser?.role }}</span>
               </div>
-
-              <div class="col-12">
-                <button type="submit" class="btn btn-accent">
-                  Update profile
-                </button>
+              <div class="profile-status-card">
+                <span class="profile-status-label">Access</span>
+                <span class="profile-status-value">Active</span>
               </div>
-            </form>
+            </div>
 
-            <p v-if="profileMessage" class="alert alert-info mt-4 mb-0">
-              {{ profileMessage }}
-            </p>
+            <nav class="profile-nav">
+              <button
+                type="button"
+                class="profile-nav-link"
+                :class="{ 'is-active': true }"
+              >
+                <i class="bi bi-person-circle"></i>
+                Profile details
+              </button>
+              <button
+                type="button"
+                class="profile-nav-link"
+                @click="openPasswordModal"
+              >
+                <i class="bi bi-shield-lock"></i>
+                Change password
+              </button>
+            </nav>
+          </aside>
+        </div>
+
+        <div class="col-12 col-xl-8">
+          <div class="profile-main-card">
+            <div class="p-4 p-lg-5">
+              <p class="section-kicker">Profile</p>
+              <h2 class="section-title mb-3">Your details</h2>
+              <p class="profile-panel-copy">
+                Keep your account information up to date so your profile stays
+                current across MyWay.
+              </p>
+
+              <form class="row g-3 mt-1" @submit.prevent="updateProfile">
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Username</label>
+                  <input v-model="username" class="form-control" type="text" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Email</label>
+                  <input v-model="email" class="form-control" type="email" />
+                </div>
+
+                <div class="col-12">
+                  <button type="submit" class="btn btn-accent">
+                    Update profile
+                  </button>
+                </div>
+              </form>
+
+              <p
+                v-if="profileMessage"
+                class="alert alert-info profile-inline-alert mt-4 mb-0"
+              >
+                {{ profileMessage }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="col-12 col-xl-5">
-        <div class="card surface-card h-100">
-          <div class="card-body p-4 p-lg-5">
-            <p class="section-kicker">Security</p>
-            <h2 class="section-title h3 mb-3">Change password</h2>
-
-            <form class="row g-3" @submit.prevent="updatePassword">
-              <div class="col-12">
-                <label class="form-label">Current Password</label>
-                <input
-                  v-model="currentPassword"
-                  class="form-control"
-                  type="password"
-                />
-              </div>
-
-              <div class="col-12">
-                <label class="form-label">New Password</label>
-                <input
-                  v-model="newPassword"
-                  class="form-control"
-                  type="password"
-                />
-              </div>
-
-              <div class="col-12">
-                <label class="form-label">Confirm New Password</label>
-                <input
-                  v-model="confirmPassword"
-                  class="form-control"
-                  type="password"
-                />
-              </div>
-
-              <div class="col-12">
-                <p class="text-muted small mb-0">
-                  Use at least 8 characters with uppercase, lowercase, a number,
-                  and a special character.
-                </p>
-              </div>
-
-              <div class="col-12">
-                <button type="submit" class="btn btn-accent">
-                  Update password
-                </button>
-              </div>
-            </form>
-
-            <p v-if="passwordMessage" class="alert alert-info mt-4 mb-0">
-              {{ passwordMessage }}
+    <div
+      v-if="isPasswordModalOpen"
+      class="profile-modal-backdrop"
+      @click.self="closePasswordModal"
+    >
+      <div class="profile-modal-card">
+        <div class="profile-modal-header">
+          <div>
+            <p class="section-kicker mb-2">Security</p>
+            <h2 class="section-title h3 mb-2">Change password</h2>
+            <p class="profile-panel-copy">
+              Use a strong password to keep your MyWay account secure.
             </p>
           </div>
+          <button
+            type="button"
+            class="profile-modal-close"
+            @click="closePasswordModal"
+            aria-label="Close password dialog"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
-      </div>
 
-      <div class="col-12">
-        <div class="card surface-card">
-          <div class="card-body p-4">
-            <p class="section-kicker">Status</p>
-            <h3 class="info-title">Current session</h3>
-            <p class="mb-2"><strong>User:</strong> {{ currentUser?.username }}</p>
-            <p class="mb-0"><strong>Role:</strong> {{ role }}</p>
+        <form class="row g-3 mt-1" @submit.prevent="updatePassword">
+          <div class="col-12">
+            <label class="form-label">Current Password</label>
+            <input
+              v-model="currentPassword"
+              class="form-control"
+              type="password"
+            />
           </div>
-        </div>
+
+          <div class="col-12">
+            <label class="form-label">New Password</label>
+            <input
+              v-model="newPassword"
+              class="form-control"
+              type="password"
+            />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Confirm New Password</label>
+            <input
+              v-model="confirmPassword"
+              class="form-control"
+              type="password"
+            />
+          </div>
+
+          <div class="col-12">
+            <p class="text-muted small mb-0">
+              Use at least 8 characters with uppercase, lowercase, a
+              number, and a special character.
+            </p>
+          </div>
+
+          <div class="col-12 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-accent">
+              Update password
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-dark"
+              @click="closePasswordModal"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+
+        <p
+          v-if="passwordMessage"
+          class="alert alert-info profile-inline-alert mt-4 mb-0"
+        >
+          {{ passwordMessage }}
+        </p>
       </div>
     </div>
   </section>
