@@ -14,7 +14,7 @@ defineProps({
     <div class="container">
       <div class="row align-items-end g-4">
         <div :class="isAuthenticated ? 'col-12 col-lg-8' : 'col-12'">
-          <p class="eyebrow">Section 2.1 Frontend Build</p>
+          
           <h1 class="hero-title">{{ pageLabel }}</h1>
         </div>
 
@@ -22,13 +22,12 @@ defineProps({
           <div class="status-card">
             <p class="status-label">Current Access</p>
             <p class="status-value">
-              {{ currentUser?.username || "Signed in" }}
+              Hello, {{ currentUser?.username || "Signed in" }}. Welcome to MyWay!
             </p>
-            <p class="status-meta">
-              Role: {{ currentUser?.role }}
-            </p>
+
           </div>
         </div>
+
       </div>
     </div>
   </section>
