@@ -1,13 +1,22 @@
 <script setup>
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { RouterView, useRoute } from "vue-router";
 import AppFooter from "./components/AppFooter.vue";
 import AppHero from "./components/AppHero.vue";
 import AppNavbar from "./components/AppNavbar.vue";
+import { theme } from "./state/theme";
 
 const route = useRoute();
 
-const pageLabel = computed(() => route.meta.label || "Modern Web App");
+const pageLabel = computed(() => route.meta.label || "MyWay");
+
+watch(
+  [pageLabel, theme],
+  ([label]) => {
+    document.title = label === "Welcome" ? "MyWay" : `MyWay | ${label}`;
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
