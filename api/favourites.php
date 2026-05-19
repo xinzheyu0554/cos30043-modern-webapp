@@ -7,6 +7,26 @@ $method = $_SERVER["REQUEST_METHOD"];
 if ($method === "GET") {
     $user = requireLogin();
     $userId = intval($user["userId"]);
+    $contentId = intval($_GET["contentId"] ?? 0);
+
+    if ($contentId > 0) {
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT favouriteId
+             FROM `Favourite`
+             WHERE userId = ? AND contentId = ?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "ii", $userId, $contentId);
+        mysqli_stmt_execute($stmt);
+
+        $result = mysqli_stmt_get_result($stmt);
+        $favourite = mysqli_fetch_assoc($result);
+
+        response(true, "Favourite status loaded", [
+            "isFavourite" => $favourite ? true : false
+        ]);
+    }
 
     $stmt = mysqli_prepare(
         $conn,
@@ -65,7 +85,9 @@ if ($method === "POST") {
         mysqli_stmt_bind_param($stmt, "ii", $contentId, $userId);
         mysqli_stmt_execute($stmt);
 
-        response(true, "Favourite removed");
+        response(true, "Favourite removed", [
+            "isFavourite" => false
+        ]);
     }
 
     $now = date("Y-m-d H:i:s");
@@ -83,7 +105,9 @@ if ($method === "POST") {
         response(false, "Failed to add favourite", mysqli_error($conn), 500);
     }
 
-    response(true, "Favourite added");
+    response(true, "Favourite added", [
+        "isFavourite" => true
+    ]);
 }
 
 response(false, "Invalid request method", null, 405);
