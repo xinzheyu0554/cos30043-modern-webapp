@@ -2,16 +2,16 @@
 import { computed } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import { currentUser, isAuthenticated, logoutUser } from "../state/session";
+import { isDarkMode, toggleTheme } from "../state/theme";
 
 const router = useRouter();
 
 const primaryLinks = computed(() => [
   { label: "Home", to: "/", show: true },
-  { label: "Browse", to: "/browse", show: true },
+  { label: "Browse", to: "/browse", show: isAuthenticated.value },
   { label: "About", to: "/about", show: true },
-  { label: "Support", to: "/support", show: true },
   { label: "Login", to: "/login", show: !isAuthenticated.value },
-  { label: "Register", to: "/register", show: !isAuthenticated.value },
+  { label: "Support", to: "/support", show: isAuthenticated.value },
   { label: "Profile", to: "/profile", show: isAuthenticated.value },
   { label: "Favourites", to: "/favourites", show: isAuthenticated.value },
   {
@@ -36,7 +36,7 @@ async function handleLogout() {
   <nav class="navbar navbar-expand-lg navbar-dark shell-navbar">
     <div class="container">
       <RouterLink class="navbar-brand brand-mark" to="/">
-        Modern Web App
+        MyWay
       </RouterLink>
 
       <button
@@ -61,6 +61,19 @@ async function handleLogout() {
           >
             {{ link.label }}
           </RouterLink>
+
+          <button
+            type="button"
+            class="btn btn-sm theme-toggle mt-3 mt-lg-0"
+            :aria-label="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+            :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+            @click="toggleTheme"
+          >
+            <i
+              class="bi"
+              :class="isDarkMode ? 'bi-sun-fill' : 'bi-moon-stars-fill'"
+            ></i>
+          </button>
 
           <button
             v-if="isAuthenticated"
