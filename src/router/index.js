@@ -9,6 +9,8 @@ import ManageContentPage from "../pages/ManageContentPage.vue";
 import AdminUsersPage from "../pages/AdminUsersPage.vue";
 import AboutPage from "../pages/AboutPage.vue";
 import SupportPage from "../pages/SupportPage.vue";
+import GroupPage from "../pages/GroupsPage.vue";
+import GroupDetailPage from "../pages/GroupDetailPage.vue";
 import { currentUser } from "../state/session";
 
 const routes = [
@@ -35,6 +37,16 @@ const routes = [
     meta: { requiresAuth: true, label: "Profile" },
   },
   {
+    path: "/groups",
+    component: GroupPage,
+    meta: { label: "Groups" },
+  },
+  {
+    path: "/groups/:id",
+    component: GroupDetailPage,
+    meta: { label: "Group Detail" },
+  },
+  {
     path: "/favourites",
     component: FavouritesPage,
     meta: { requiresAuth: true, label: "Saved Favourites" },
@@ -54,7 +66,11 @@ const routes = [
     meta: { requiresAuth: true, roles: ["admin"], label: "Admin Users" },
   },
   { path: "/about", component: AboutPage, meta: { label: "About MYWAY" } },
-  { path: "/support", component: SupportPage, meta: { label: "Help And Support" } },
+  {
+    path: "/support",
+    component: SupportPage,
+    meta: { label: "Help And Support" },
+  },
   { path: "/:pathMatch(.*)*", redirect: "/" },
 ];
 
