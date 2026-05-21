@@ -20,6 +20,36 @@ const replyMessage = ref("");
 const replyTarget = ref(null);
 const collapsedCommentIds = ref([]);
 
+// Follow author feature
+const followedAuthors = ref(
+  JSON.parse(localStorage.getItem("followedAuthors")) || []
+);
+
+const authorName = computed(() => {
+  return (
+    content.value?.author ||
+    content.value?.creatorName ||
+    content.value?.username ||
+    "Unknown"
+  );
+});
+
+const isFollowingAuthor = computed(() => {
+  return followedAuthors.value.includes(authorName.value);
+});
+
+function toggleFollowAuthor() {
+  if (followedAuthors.value.includes(authorName.value)) {
+    followedAuthors.value = followedAuthors.value.filter(
+      (name) => name !== authorName.value
+    );
+  } else {
+    followedAuthors.value.push(authorName.value);
+  }
+
+  localStorage.setItem("followedAuthors", JSON.stringify(followedAuthors.value));
+}
+
 const isStaff = computed(() =>
   ["admin", "adminstaff"].includes(currentUser.value?.role)
 );
@@ -261,6 +291,15 @@ onMounted(loadAll);
               @click="toggleLike"
             >
               <i :class="isLiked ? 'bi bi-heart-fill' : 'bi bi-heart'"></i>
+            </button>
+
+            <!-- Follow author feature -->
+            <button
+              type="button"
+              class="btn btn-accent"
+              @click="toggleFollowAuthor"
+            >
+              {{ isFollowingAuthor ? "Following author" : "Follow author" }}
             </button>
 
             <button
