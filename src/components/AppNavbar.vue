@@ -10,10 +10,12 @@ const primaryLinks = computed(() => [
   { label: "Home", to: "/", show: true },
   { label: "Browse", to: "/browse", show: isAuthenticated.value },
   { label: "About", to: "/about", show: true },
+  { label: "Map", to: "/map", show: true },
   { label: "Login", to: "/login", show: !isAuthenticated.value },
   { label: "Support", to: "/support", show: isAuthenticated.value },
   { label: "Profile", to: "/profile", show: isAuthenticated.value },
   { label: "Favourites", to: "/favourites", show: isAuthenticated.value },
+
   {
     label: "Manage Content",
     to: "/manage-content",
@@ -35,9 +37,9 @@ async function handleLogout() {
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark shell-navbar">
     <div class="container">
-      <RouterLink class="navbar-brand brand-mark" to="/">
-        MyWay
-      </RouterLink>
+      <RouterLink to="/" class="brand">
+      <img src="/mywaylogo.png" alt="MyWay logo" class="navbar-logo" />
+        </RouterLink>
 
       <button
         class="navbar-toggler"
