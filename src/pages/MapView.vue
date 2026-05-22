@@ -44,10 +44,9 @@
             <span class="badge">{{ item.category || "Attraction" }}</span>
             <h2>{{ item.title }}</h2>
             <p>{{ shortText(item.body || item.description || "") }}</p>
-
             <!-- Navigation Google map location -->
             <iframe
-              :src="getMapUrl(item.title)"
+              :src="getMapUrl(item)"
               loading="lazy"
             ></iframe>
           </div>
@@ -126,11 +125,16 @@ function shortText(text) {
   return text.length > 120 ? text.substring(0, 120) + "..." : text;
 }
 
-// Create Google Maps link from attraction title
-function getMapUrl(title) {
-  return `https://www.google.com/maps?q=${encodeURIComponent(title)}&output=embed`;
-}
+// Create Google Maps link from blog title
+function getMapUrl(item) {
+  const place =
+    item.location ||
+    item.title ||
+    item.category ||
+    "tourist attraction";
 
+  return `https://www.google.com/maps?q=${encodeURIComponent(place)}&output=embed`;
+}
 function previousPage() {
   if (page.value > 1) {
     page.value--;
