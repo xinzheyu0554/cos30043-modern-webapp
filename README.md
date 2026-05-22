@@ -1,5 +1,10 @@
 # COS30043 Modern Web Application
 
+## Admin account for testing:
+Email: **newadmin@example.com**
+
+Password: **Password123!**
+
 ## Project Overview
 
 This project is a full-stack web application developed for COS30043 using:
