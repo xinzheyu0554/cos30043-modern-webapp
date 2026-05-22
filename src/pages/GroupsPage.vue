@@ -16,15 +16,17 @@ const myGroups = computed(() => groups.value.filter((g) => g.isMember));
 
 async function loadGroups() {
   try {
+//fetch groups from the api with current search and category filters
+
     isLoading.value = true;
     message.value = "";
-
+    //build query string like: groups.php? search = nameofclub and category= social
     const query = new URLSearchParams({
       search: search.value,
       category: category.value,
     });
-
     const result = await apiRequest(`groups.php?${query.toString()}`);
+    //ensure we always get an array (even if api returns somethign unexpected)
     groups.value = Array.isArray(result.data) ? result.data : [];
   } catch (error) {
     message.value = error.message;
@@ -32,15 +34,15 @@ async function loadGroups() {
     isLoading.value = false;
   }
 }
-
+//called when the search button is clicked or enter is pressed 
 function submitSearch() {
   loadGroups();
 }
-
+//navigate to group detail page (eg. group 3)
 function openGroup(groupId) {
   router.push(`/groups/${groupId}`);
 }
-
+//load groups when the page first mounts
 onMounted(loadGroups);
 </script>
 

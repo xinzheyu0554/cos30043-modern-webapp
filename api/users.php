@@ -1,6 +1,6 @@
 <?php
-require_once "helpers.php";
 require_once "db.php";
+require_once "helpers.php";
 
 $method = $_SERVER["REQUEST_METHOD"];
 
