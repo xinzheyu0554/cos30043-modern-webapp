@@ -13,6 +13,7 @@ const primaryLinks = computed(() => [
   { label: "Map", to: "/map", show: true },
   { label: "Login", to: "/login", show: !isAuthenticated.value },
   { label: "Support", to: "/support", show: isAuthenticated.value },
+  { label: "Groups", to: "/groups", show: true},
   { label: "Profile", to: "/profile", show: isAuthenticated.value },
   { label: "Favourites", to: "/favourites", show: isAuthenticated.value },
 

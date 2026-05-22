@@ -1,6 +1,6 @@
 <?php
-require_once "db.php";
 require_once "helpers.php";
+require_once "db.php";
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     response(false, "Invalid request method", null, 405);
