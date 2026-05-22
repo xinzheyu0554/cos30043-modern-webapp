@@ -6,6 +6,17 @@ import { currentUser, syncCurrentUser } from "../state/session";
 const username = ref("");
 const email = ref("");
 const role = ref("");
+
+// Profile bio feature
+const bio = ref("");
+
+
+const followers = ref(0);
+const following = ref(
+  JSON.parse(localStorage.getItem("followedAuthors"))?.length || 0
+);
+const postCount = ref(0);
+
 const profileMessage = ref("");
 const passwordMessage = ref("");
 const currentPassword = ref("");
@@ -27,6 +38,32 @@ const profileInitials = computed(() => {
     .join("");
 });
 
+
+async function loadPostCount(profileUsername) {
+  try {
+    const result = await apiRequest("contents.php");
+    const data = result.data || result;
+
+    const items = Array.isArray(data)
+      ? data
+      : data.items ||
+        data.contents ||
+        data.records ||
+        [];
+
+    postCount.value = items.filter((item) => {
+      return (
+        item.author === profileUsername ||
+        item.username === profileUsername ||
+        item.creatorName === profileUsername ||
+        item.created_by === currentUser.value?.id
+      );
+    }).length;
+  } catch {
+    postCount.value = 0;
+  }
+}
+
 async function loadProfile() {
   try {
     const result = await apiRequest("profile.php");
@@ -35,6 +72,22 @@ async function loadProfile() {
     username.value = profile.username;
     email.value = profile.email;
     role.value = profile.role;
+
+    // Load saved bio from localStorage or use profile bio if available
+    bio.value =
+      localStorage.getItem(`bio-${profile.email}`) ||
+      profile.bio ||
+      "";
+
+    // Load follower count for this profile
+    followers.value =
+      Number(localStorage.getItem(`followers-${profile.email}`)) || 0;
+
+    // Count followed authors for following count 
+    following.value =
+      JSON.parse(localStorage.getItem("followedAuthors"))?.length || 0;
+
+    await loadPostCount(profile.username);
   } catch (error) {
     profileMessage.value = error.message;
   }
@@ -52,9 +105,13 @@ async function updateProfile() {
       }),
     });
 
+    // Save bio to localStorage (since it's not supported by the API)
+    localStorage.setItem(`bio-${email.value}`, bio.value);
+
     syncCurrentUser({
       username: username.value,
       email: email.value,
+      bio: bio.value,
     });
 
     profileMessage.value = "Profile updated successfully.";
@@ -120,15 +177,48 @@ onMounted(loadProfile);
         <div class="col-12 col-xl-4">
           <aside class="profile-sidebar">
             <div class="profile-avatar">{{ profileInitials }}</div>
+
             <p class="section-kicker">Account</p>
-            <h2 class="profile-name">{{ username || currentUser?.username }}</h2>
-            <p class="profile-subtle">{{ email || currentUser?.email }}</p>
+
+            <h2 class="profile-name">
+              {{ username || currentUser?.username }}
+            </h2>
+
+            <p class="profile-subtle">
+              {{ email || currentUser?.email }}
+            </p>
+
+            <!-- Profile bio feature -->
+            <p class="profile-bio">
+              {{ bio || "No bio added yet." }}
+            </p>
+
+            <!-- Social profile statistics -->
+            <div class="profile-social-grid">
+              <div>
+                <strong>{{ postCount }}</strong>
+                <span>Posts</span>
+              </div>
+
+              <div>
+                <strong>{{ followers }}</strong>
+                <span>Followers</span>
+              </div>
+
+              <div>
+                <strong>{{ following }}</strong>
+                <span>Following</span>
+              </div>
+            </div>
 
             <div class="profile-status-grid">
               <div class="profile-status-card">
                 <span class="profile-status-label">Role</span>
-                <span class="profile-status-value">{{ role || currentUser?.role }}</span>
+                <span class="profile-status-value">
+                  {{ role || currentUser?.role }}
+                </span>
               </div>
+
               <div class="profile-status-card">
                 <span class="profile-status-label">Access</span>
                 <span class="profile-status-value">Active</span>
@@ -144,6 +234,7 @@ onMounted(loadProfile);
                 <i class="bi bi-person-circle"></i>
                 Profile details
               </button>
+
               <button
                 type="button"
                 class="profile-nav-link"
@@ -160,7 +251,9 @@ onMounted(loadProfile);
           <div class="profile-main-card">
             <div class="p-4 p-lg-5">
               <p class="section-kicker">Profile</p>
+
               <h2 class="section-title mb-3">Your details</h2>
+
               <p class="profile-panel-copy">
                 Keep your account information up to date so your profile stays
                 current across MyWay.
@@ -169,12 +262,31 @@ onMounted(loadProfile);
               <form class="row g-3 mt-1" @submit.prevent="updateProfile">
                 <div class="col-12 col-md-6">
                   <label class="form-label">Username</label>
-                  <input v-model="username" class="form-control" type="text" />
+                  <input
+                    v-model="username"
+                    class="form-control"
+                    type="text"
+                  />
                 </div>
 
                 <div class="col-12 col-md-6">
                   <label class="form-label">Email</label>
-                  <input v-model="email" class="form-control" type="email" />
+                  <input
+                    v-model="email"
+                    class="form-control"
+                    type="email"
+                  />
+                </div>
+
+                <!-- Editing bio field -->
+                <div class="col-12">
+                  <label class="form-label">Bio</label>
+                  <textarea
+                    v-model="bio"
+                    class="form-control"
+                    rows="3"
+                    placeholder="Tell people about yourself..."
+                  ></textarea>
                 </div>
 
                 <div class="col-12">
@@ -205,11 +317,14 @@ onMounted(loadProfile);
         <div class="profile-modal-header">
           <div>
             <p class="section-kicker mb-2">Security</p>
+
             <h2 class="section-title h3 mb-2">Change password</h2>
+
             <p class="profile-panel-copy">
               Use a strong password to keep your MyWay account secure.
             </p>
           </div>
+
           <button
             type="button"
             class="profile-modal-close"
@@ -250,8 +365,8 @@ onMounted(loadProfile);
 
           <div class="col-12">
             <p class="text-muted small mb-0">
-              Use at least 8 characters with uppercase, lowercase, a
-              number, and a special character.
+              Use at least 8 characters with uppercase, lowercase, a number,
+              and a special character.
             </p>
           </div>
 
@@ -259,6 +374,7 @@ onMounted(loadProfile);
             <button type="submit" class="btn btn-accent">
               Update password
             </button>
+
             <button
               type="button"
               class="btn btn-outline-dark"

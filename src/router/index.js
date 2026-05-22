@@ -65,6 +65,11 @@ const routes = [
     component: AdminUsersPage,
     meta: { requiresAuth: true, roles: ["admin"], label: "Admin Users" },
   },
+  {
+  path: "/map",
+  name: "Map",
+  component: () => import("../pages/MapView.vue")
+},
   { path: "/about", component: AboutPage, meta: { label: "About MYWAY" } },
   {
     path: "/support",
