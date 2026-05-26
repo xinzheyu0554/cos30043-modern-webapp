@@ -30,31 +30,6 @@ The system demonstrates a **content-based platform** with:
 
 ---
 
-## Project Structure
-
-```
-COS30043-MODERN-WEBAPP/
-├── api/                  # PHP backend (REST-style API)
-│   ├── db.php
-│   ├── helpers.php
-│   ├── login.php
-│   ├── register.php
-│   ├── logout.php
-│   ├── users.php
-│   ├── profile.php
-│   ├── contents.php
-│   ├── comments.php
-│   ├── likes.php
-│   └── favourites.php
-├── src/                  # Vue frontend source code
-├── public/
-├── index.html
-├── package.json
-├── vite.config.js
-└── README.md
-```
-
----
 
 ## Prerequisites
 
@@ -132,76 +107,6 @@ Authorization: Bearer <token>
 
 ---
 
-## API Documentation
-
-### Auth
-
-```
-POST   /api/login.php
-POST   /api/register.php
-POST   /api/logout.php
-```
-
----
-
-### User Management (Admin only)
-
-```
-GET    /api/users.php
-PUT    /api/users.php        (change role / restore user)
-DELETE /api/users.php        (soft delete user)
-```
-
----
-
-### Profile (Current User)
-
-```
-GET    /api/profile.php
-PUT    /api/profile.php
-```
-
----
-
-### Content
-
-```
-GET    /api/contents.php
-GET    /api/contents.php?id=1
-POST   /api/contents.php
-PUT    /api/contents.php
-DELETE /api/contents.php
-```
-
----
-
-### Comment
-
-```
-GET    /api/comments.php?contentId=1
-POST   /api/comments.php
-DELETE /api/comments.php
-```
-
----
-
-### Like
-
-```
-GET    /api/likes.php?contentId=1
-POST   /api/likes.php
-```
-
----
-
-### Favourite
-
-```
-GET    /api/favourites.php
-POST   /api/favourites.php
-```
-
----
 
 ## Role Permissions
 
@@ -242,20 +147,6 @@ POST   /api/favourites.php
 
 ---
 
-## Database
-
-The project connects to Swinburne Feenix MariaDB:
-
-```php
-$host = "feenix-mariadb.swin.edu.au";
-$dbnm = "s105385294_db";
-```
-
-⚠️ **Important:**
-
-Do NOT commit your database password.
-
----
 
 ## Development Notes
 
@@ -282,29 +173,6 @@ npm run preview
 * Backend deployed on Mercury (PHP environment)
 * Frontend can be deployed separately or hosted via Mercury static files
 * No additional backend setup required
-
----
-
-## Current Features
-
-* User authentication (register / login / logout)
-* Role-based access control
-* Content CRUD system
-* Comment system with reply support
-* Like system (toggle)
-* Favourite system (toggle)
-* User profile management
-
----
-
-## Future Improvements
-
-* Frontend UI enhancement
-* Vue Router integration
-* Better error handling
-* Pagination UI
-* Advanced search & filtering
-* Token expiration handling
 
 ---
 
