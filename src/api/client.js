@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = `${import.meta.env.BASE_URL}api`;
 const LOCAL_AUTH_KEY = "auth:persistent";
 const SESSION_AUTH_KEY = "auth:session";
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -59,7 +59,7 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (token) {
-    headers.Authorization = `Bearer ${token}`;
+    headers["X-Auth-Token"] = token;
   }
 
   const response = await fetch(`${API_BASE}/${path}`, {

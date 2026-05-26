@@ -7,7 +7,7 @@ $method = $_SERVER["REQUEST_METHOD"];
 if ($method === "GET") {
     $user = requireLogin();
     $userId = intval($user["userId"]);
-    $contentId = intval($_GET["contentId"] ?? 0);
+    $contentId = intval(isset($_GET["contentId"]) ? $_GET["contentId"] : 0);
 
     if ($contentId > 0) {
         $stmt = mysqli_prepare(
@@ -55,7 +55,7 @@ if ($method === "POST") {
 
     $data = getJsonInput();
 
-    $contentId = intval($data["contentId"] ?? 0);
+    $contentId = intval(isset($data["contentId"]) ? $data["contentId"] : 0);
     $userId = intval($user["userId"]);
 
     if ($contentId <= 0) {

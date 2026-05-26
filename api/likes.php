@@ -5,7 +5,7 @@ require_once "db.php";
 $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
-    $contentId = intval($_GET["contentId"] ?? 0);
+    $contentId = intval(isset($_GET["contentId"]) ? $_GET["contentId"] : 0);
 
     if ($contentId <= 0) {
         response(false, "contentId is required", null, 400);
@@ -47,7 +47,7 @@ if ($method === "GET") {
     }
 
     response(true, "Likes loaded", [
-        "totalLikes" => intval($data["totalLikes"] ?? 0),
+        "totalLikes" => intval(isset($data["totalLikes"]) ? $data["totalLikes"] : 0),
         "isLiked" => $isLiked
     ]);
 }
@@ -57,7 +57,7 @@ if ($method === "POST") {
 
     $data = getJsonInput();
 
-    $contentId = intval($data["contentId"] ?? 0);
+    $contentId = intval(isset($data["contentId"]) ? $data["contentId"] : 0);
     $userId = intval($user["userId"]);
 
     if ($contentId <= 0) {

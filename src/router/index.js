@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import LandingPage from "../pages/LandingPage.vue";
 import HomePage from "../pages/HomePage.vue";
 import ContentDetailPage from "../pages/ContentDetailPage.vue";
@@ -66,10 +66,11 @@ const routes = [
     meta: { requiresAuth: true, roles: ["admin"], label: "Admin Users" },
   },
   {
-  path: "/map",
-  name: "Map",
-  component: () => import("../pages/MapView.vue")
-},
+    path: "/map",
+    name: "Map",
+    component: () => import("../pages/MapView.vue"),
+    meta: { label: "Map" },
+  },
   { path: "/about", component: AboutPage, meta: { label: "About MYWAY" } },
   {
     path: "/support",
@@ -80,7 +81,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior() {
     return { top: 0 };
@@ -91,15 +92,15 @@ router.beforeEach((to) => {
   const user = currentUser.value;
 
   if (to.meta.requiresAuth && !user) {
-    return "/login";
+    return { path: "/login" };
   }
 
   if (to.meta.guestOnly && user) {
-    return "/browse";
+    return { path: "/browse" };
   }
 
   if (to.meta.roles?.length && !to.meta.roles.includes(user?.role)) {
-    return "/browse";
+    return { path: "/browse" };
   }
 
   return true;

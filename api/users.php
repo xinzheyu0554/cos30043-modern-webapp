@@ -28,8 +28,8 @@ if ($method === "PUT") {
 
     $data = getJsonInput();
 
-    $userId = intval($data["userId"] ?? 0);
-    $action = $data["action"] ?? "";
+    $userId = intval(isset($data["userId"]) ? $data["userId"] : 0);
+    $action = isset($data["action"]) ? $data["action"] : "";
     $now = date("Y-m-d H:i:s");
 
     if ($userId <= 0) {
@@ -37,7 +37,7 @@ if ($method === "PUT") {
     }
 
     if ($action === "updateRole") {
-        $role = $data["role"] ?? "";
+        $role = isset($data["role"]) ? $data["role"] : "";
 
         if (!in_array($role, ["user", "adminstaff"])) {
             response(false, "Invalid role", null, 400);
@@ -84,7 +84,7 @@ if ($method === "DELETE") {
 
     $data = getJsonInput();
 
-    $userId = intval($data["userId"] ?? 0);
+    $userId = intval(isset($data["userId"]) ? $data["userId"] : 0);
 
     if ($userId <= 0) {
         response(false, "userId is required", null, 400);

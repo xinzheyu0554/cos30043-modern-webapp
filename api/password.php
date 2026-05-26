@@ -2,6 +2,34 @@
 require_once "helpers.php";
 require_once "db.php";
 
+function myway_password_hash($password) {
+    if (function_exists("password_hash")) {
+        return password_hash($password, PASSWORD_DEFAULT);
+    }
+
+    $cost = 10;
+    $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./";
+    $salt = "";
+
+    for ($i = 0; $i < 22; $i++) {
+        $salt .= $chars[mt_rand(0, strlen($chars) - 1)];
+    }
+
+    return crypt($password, sprintf("$2y$%02d$", $cost) . $salt);
+}
+
+function myway_password_verify($password, $hash) {
+    if (function_exists("password_verify")) {
+        return password_verify($password, $hash);
+    }
+
+    if ($hash === null || $hash === "") {
+        return false;
+    }
+
+    return crypt($password, $hash) === $hash;
+}
+
 $user = requireLogin();
 $method = $_SERVER["REQUEST_METHOD"];
 
@@ -11,9 +39,9 @@ if ($method !== "PUT") {
 
 $data = getJsonInput();
 
-$currentPassword = $data["currentPassword"] ?? "";
-$newPassword = $data["newPassword"] ?? "";
-$confirmPassword = $data["confirmPassword"] ?? "";
+$currentPassword = isset($data["currentPassword"]) ? $data["currentPassword"] : "";
+$newPassword = isset($data["newPassword"]) ? $data["newPassword"] : "";
+$confirmPassword = isset($data["confirmPassword"]) ? $data["confirmPassword"] : "";
 $userId = intval($user["userId"]);
 
 if ($currentPassword === "" || $newPassword === "" || $confirmPassword === "") {
@@ -41,15 +69,15 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $account = mysqli_fetch_assoc($result);
 
-if (!$account || !password_verify($currentPassword, $account["password"])) {
+if (!$account || !myway_password_verify($currentPassword, $account["password"])) {
     response(false, "Current password is incorrect", null, 401);
 }
 
-if (password_verify($newPassword, $account["password"])) {
+if (myway_password_verify($newPassword, $account["password"])) {
     response(false, "New password must be different from the current password", null, 400);
 }
 
-$hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+$hashedPassword = myway_password_hash($newPassword);
 $now = date("Y-m-d H:i:s");
 
 $updateStmt = mysqli_prepare(

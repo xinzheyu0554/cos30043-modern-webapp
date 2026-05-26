@@ -3,55 +3,69 @@ import { computed, onMounted, ref } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { apiRequest } from "../api/client";
 import { isAuthenticated } from "../state/session";
-//use Route reads the current URL to get the grip id from groups id 
-//and navigate to other pages 
+
 const route = useRoute();
 const router = useRouter();
 
-//extract the group IDs from the url (groups/3 meaning groupid 3)
 const groupId = computed(() => Number(route.params.id));
 
-//reactive state 
-const group = ref(null); //hold the full group data fromthe API 
+const group = ref(null);
 const message = ref("");
-const joining = ref(false); //will be true while join/leave request is in progress
+const joining = ref(false);
 
-//fetch the group details from the API
+const baseUrl = import.meta.env.BASE_URL;
+
+function resolveImageUrl(imageUrl) {
+  if (!imageUrl) {
+    return "";
+  }
+
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://") ||
+    imageUrl.startsWith("data:")
+  ) {
+    return imageUrl;
+  }
+
+  const cleanPath = imageUrl.replace(/^\/+/, "");
+  return `${baseUrl}${cleanPath}`;
+}
+
 async function loadGroup() {
   try {
     message.value = "";
-    //calls groups.php id # any number and then return the group with the member list
+
     const result = await apiRequest(`groups.php?id=${groupId.value}`);
     group.value = result.data;
   } catch (error) {
     message.value = error.message;
   }
 }
-//join or leave the group toggle
+
 async function toggleMembership() {
-  //if not logged in redirect to login page!
   if (!isAuthenticated.value) {
     router.push("/login");
     return;
   }
 
   try {
-    joining.value = true; //show "Processing" on the button 
+    joining.value = true;
     message.value = "";
-    //POST to groups.php with the groupID and also backend checks if they are already a member then it removes them if not add them 
+
     await apiRequest("groups.php", {
       method: "POST",
       body: JSON.stringify({ groupId: groupId.value }),
     });
-    // reload the group data to reflect the updated membership status and member list
+
     await loadGroup();
   } catch (error) {
     message.value = error.message;
   } finally {
-    joining.value = false; //re enable button 
+    joining.value = false;
   }
 }
-//reloads the group data when the page first mounts 
+
 onMounted(loadGroup);
 </script>
 
@@ -69,7 +83,7 @@ onMounted(loadGroup);
         <div class="detail-image-wrap">
           <img
             v-if="group.imageUrl"
-            :src="group.imageUrl"
+            :src="resolveImageUrl(group.imageUrl)"
             class="detail-image"
             :alt="group.name"
           />
@@ -85,9 +99,7 @@ onMounted(loadGroup);
 
           <h2 class="section-title">{{ group.name }}</h2>
 
-          <p class="content-subtle">
-            Created by {{ group.creatorName }}
-          </p>
+          <p class="content-subtle">Created by {{ group.creatorName }}</p>
 
           <p class="content-subtle mb-3">
             <i class="bi bi-people me-1"></i>
@@ -114,9 +126,7 @@ onMounted(loadGroup);
             </button>
           </div>
 
-          <p v-else class="text-muted mt-4 mb-0">
-            Login to join this group!
-          </p>
+          <p v-else class="text-muted mt-4 mb-0">Login to join this group!</p>
         </div>
       </article>
 
@@ -145,9 +155,7 @@ onMounted(loadGroup);
             </div>
           </div>
 
-          <p v-else class="text-muted mb-0">
-            No members yet.
-          </p>
+          <p v-else class="text-muted mb-0">No members yet.</p>
         </div>
       </div>
     </div>

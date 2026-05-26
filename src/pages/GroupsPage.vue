@@ -12,21 +12,38 @@ const category = ref("");
 const message = ref("");
 const isLoading = ref(false);
 
+const baseUrl = import.meta.env.BASE_URL;
+
 const myGroups = computed(() => groups.value.filter((g) => g.isMember));
+
+function resolveImageUrl(imageUrl) {
+  if (!imageUrl) {
+    return "";
+  }
+
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://") ||
+    imageUrl.startsWith("data:")
+  ) {
+    return imageUrl;
+  }
+
+  const cleanPath = imageUrl.replace(/^\/+/, "");
+  return `${baseUrl}${cleanPath}`;
+}
 
 async function loadGroups() {
   try {
-//fetch groups from the api with current search and category filters
-
     isLoading.value = true;
     message.value = "";
-    //build query string like: groups.php? search = nameofclub and category= social
+
     const query = new URLSearchParams({
       search: search.value,
       category: category.value,
     });
+
     const result = await apiRequest(`groups.php?${query.toString()}`);
-    //ensure we always get an array (even if api returns somethign unexpected)
     groups.value = Array.isArray(result.data) ? result.data : [];
   } catch (error) {
     message.value = error.message;
@@ -34,15 +51,15 @@ async function loadGroups() {
     isLoading.value = false;
   }
 }
-//called when the search button is clicked or enter is pressed 
+
 function submitSearch() {
   loadGroups();
 }
-//navigate to group detail page (eg. group 3)
+
 function openGroup(groupId) {
   router.push(`/groups/${groupId}`);
 }
-//load groups when the page first mounts
+
 onMounted(loadGroups);
 </script>
 
@@ -71,7 +88,7 @@ onMounted(loadGroups);
           <article class="card h-100 surface-card content-card">
             <img
               v-if="group.imageUrl"
-              :src="group.imageUrl"
+              :src="resolveImageUrl(group.imageUrl)"
               class="card-img-top content-image"
               alt="group image"
             />
@@ -151,7 +168,7 @@ onMounted(loadGroups);
         <article class="card h-100 surface-card content-card">
           <img
             v-if="group.imageUrl"
-            :src="group.imageUrl"
+            :src="resolveImageUrl(group.imageUrl)"
             class="card-img-top content-image"
             alt="group image"
           />

@@ -15,9 +15,11 @@ function isPrivilegedSession() {
 }
 
 function clearPrivilegedAuthOnUnload() {
-  if (isPrivilegedSession()) {
-    clearAuth();
+  if (!isPrivilegedSession()) {
+    return;
   }
+
+  return;
 }
 
 if (typeof window !== "undefined") {

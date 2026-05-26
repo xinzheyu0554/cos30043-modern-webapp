@@ -5,7 +5,7 @@ require_once "db.php";
 $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
-    $id = intval($_GET["id"] ?? 0);
+    $id = intval(isset($_GET["id"]) ? $_GET["id"] : 0);
 
     if ($id > 0) {
         $stmt = mysqli_prepare(
@@ -25,11 +25,11 @@ if ($method === "GET") {
         response(true, "Content loaded", $content);
     }
 
-    $search = trim($_GET["search"] ?? "");
-    $category = trim($_GET["category"] ?? "");
-    $sort = $_GET["sort"] ?? "newest";
-    $page = max(1, intval($_GET["page"] ?? 1));
-    $limit = max(1, intval($_GET["limit"] ?? 6));
+    $search = trim(isset($_GET["search"]) ? $_GET["search"] : "");
+    $category = trim(isset($_GET["category"]) ? $_GET["category"] : "");
+    $sort = isset($_GET["sort"]) ? $_GET["sort"] : "newest";
+    $page = max(1, intval(isset($_GET["page"]) ? $_GET["page"] : 1));
+    $limit = max(1, intval(isset($_GET["limit"]) ? $_GET["limit"] : 6));
     $offset = ($page - 1) * $limit;
 
     $orderBy = "c.createdAt DESC";
@@ -78,11 +78,11 @@ if ($method === "POST") {
 
     $data = getJsonInput();
 
-    $title = trim($data["title"] ?? "");
-    $author = trim($data["author"] ?? "");
-    $category = trim($data["category"] ?? "");
-    $imageUrl = trim($data["imageUrl"] ?? "");
-    $body = trim($data["body"] ?? "");
+    $title = trim(isset($data["title"]) ? $data["title"] : "");
+    $author = trim(isset($data["author"]) ? $data["author"] : "");
+    $category = trim(isset($data["category"]) ? $data["category"] : "");
+    $imageUrl = trim(isset($data["imageUrl"]) ? $data["imageUrl"] : "");
+    $body = trim(isset($data["body"]) ? $data["body"] : "");
 
     if ($title === "" || $body === "") {
         response(false, "Title and body are required", null, 400);
@@ -122,12 +122,12 @@ if ($method === "PUT") {
 
     $data = getJsonInput();
 
-    $contentId = intval($data["contentId"] ?? 0);
-    $title = trim($data["title"] ?? "");
-    $author = trim($data["author"] ?? "");
-    $category = trim($data["category"] ?? "");
-    $imageUrl = trim($data["imageUrl"] ?? "");
-    $body = trim($data["body"] ?? "");
+    $contentId = intval(isset($data["contentId"]) ? $data["contentId"] : 0);
+    $title = trim(isset($data["title"]) ? $data["title"] : "");
+    $author = trim(isset($data["author"]) ? $data["author"] : "");
+    $category = trim(isset($data["category"]) ? $data["category"] : "");
+    $imageUrl = trim(isset($data["imageUrl"]) ? $data["imageUrl"] : "");
+    $body = trim(isset($data["body"]) ? $data["body"] : "");
 
     if ($contentId <= 0 || $title === "" || $body === "") {
         response(false, "Invalid content data", null, 400);
@@ -166,7 +166,7 @@ if ($method === "DELETE") {
 
     $data = getJsonInput();
 
-    $contentId = intval($data["contentId"] ?? 0);
+    $contentId = intval(isset($data["contentId"]) ? $data["contentId"] : 0);
 
     if ($contentId <= 0) {
         response(false, "contentId is required", null, 400);

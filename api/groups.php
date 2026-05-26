@@ -8,7 +8,7 @@ require_once "helpers.php";
 $method = $_SERVER["REQUEST_METHOD"];
 //helps get all groups by ID as made for SQL database and checks by ID
 if ($method === "GET") {
-    $id = intval($_GET["id"] ?? 0);
+    $id = intval(isset($_GET["id"]) ? $_GET["id"] : 0);
 
     if ($id > 0) {
         //will fetch group along with the username of user
@@ -89,8 +89,8 @@ if ($method === "GET") {
         response(true, "Group loaded", $group);
     }
     //list all groups also has optional search and category filter 
-    $search = trim($_GET["search"] ?? "");
-    $category = trim($_GET["category"] ?? "");
+    $search = trim(isset($_GET["search"]) ? $_GET["search"] : "");
+    $category = trim(isset($_GET["category"]) ? $_GET["category"] : "");
 
     $sql = "
         SELECT g.*, u.username AS creatorName,
@@ -123,7 +123,14 @@ if ($method === "GET") {
     $stmt = mysqli_prepare($conn, $sql);
     //help prepare and bind parameters
     if (!empty($params)) {
-        mysqli_stmt_bind_param($stmt, $types, ...$params);
+        $bindParams = [];
+        $bindParams[] = $types;
+
+        for ($i = 0; $i < count($params); $i++) {
+            $bindParams[] = &$params[$i];
+        }
+
+        call_user_func_array(array($stmt, "bind_param"), $bindParams);
     }
 
     mysqli_stmt_execute($stmt);
@@ -167,7 +174,7 @@ if ($method === "POST") {
     //read JSON sent from the front end
     $data = getJsonInput();
 
-    $groupId = intval($data["groupId"] ?? 0);
+    $groupId = intval(isset($data["groupId"]) ? $data["groupId"] : 0);
     $userId = intval($user["userId"]);
     //validate that a group id was provided as in the 1,2,3 etc of each group
     if ($groupId <= 0) {

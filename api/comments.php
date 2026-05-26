@@ -5,7 +5,7 @@ require_once "db.php";
 $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
-    $contentId = intval($_GET["contentId"] ?? 0);
+    $contentId = intval(isset($_GET["contentId"]) ? $_GET["contentId"] : 0);
 
     if ($contentId <= 0) {
         response(false, "contentId is required", null, 400);
@@ -56,11 +56,11 @@ if ($method === "POST") {
 
     $data = getJsonInput();
 
-    $contentId = intval($data["contentId"] ?? 0);
+    $contentId = intval(isset($data["contentId"]) ? $data["contentId"] : 0);
     $parentId = isset($data["parentId"]) && $data["parentId"] !== null
         ? intval($data["parentId"])
         : null;
-    $message = trim($data["message"] ?? "");
+    $message = trim(isset($data["message"]) ? $data["message"] : "");
 
     if ($contentId <= 0 || $message === "") {
         response(false, "contentId and message are required", null, 400);
@@ -137,7 +137,7 @@ if ($method === "DELETE") {
 
     $data = getJsonInput();
 
-    $commentId = intval($data["commentId"] ?? 0);
+    $commentId = intval(isset($data["commentId"]) ? $data["commentId"] : 0);
 
     if ($commentId <= 0) {
         response(false, "commentId is required", null, 400);
